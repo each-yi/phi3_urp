@@ -12,7 +12,10 @@ from phi3cfg.retrieval import annotate, keyword_highlights  # noqa: E402
 
 def test_score():
     assert score('yes', 'Yes, there is a mass.', 'closed') == 1
-    assert score('no', 'Yes, no doubt.', 'closed') == 0
+    assert score('no', 'Yes, no doubt.', 'closed') == 1   # team rule: answer word contained in prediction
+    assert score('no', 'Yes.', 'closed') == 0
+    assert score('Left', 'left side', 'closed') == 1        # choice question labelled CLOSED
+    assert score('right side', 'right side', 'closed') == 0  # multi-word closed answers never match
     assert score('left lung', 'It is in the left upper lobe', 'open') == 0.5
     assert score('frontal and occipital', 'frontal and occipital lobes', 'open') == 1
 

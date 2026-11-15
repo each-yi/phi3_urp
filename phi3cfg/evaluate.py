@@ -1,7 +1,8 @@
 """Score runs and print a Table-1-style comparison for Phi3V-Med (paper values included).
 
-Metrics (Sec. 4.3, LLaVA-Med convention): closed = accuracy, open = recall of ground-truth
-tokens in the generated answer, overall = mean over all questions.
+Metrics (Sec. 4.3, LLaVA-Med convention): closed = accuracy (answer word contained in the
+prediction), open = recall of ground-truth tokens in the generated answer, overall = mean over
+all questions. Open/closed come from the dataset labels (VQA-RAD: run phi3cfg.vqarad_labels).
 Partial runs (top-x% modes) are merged over the baseline: questions not re-run keep the baseline answer.
 
   python -m phi3cfg.evaluate --dataset-dir DATA/vqa_rad --baseline out/base.jsonl \
@@ -35,14 +36,14 @@ def tokens(text):
 
 
 def score(answer, prediction, answer_type):
-    gt, pred = tokens(answer), tokens(prediction)
+    """Same rule as the team's Phi-3.5V baseline (MinseongKim-dev/Expert-CFG, 01 notebook):
+    closed = the whole lower-cased answer is one of the prediction's tokens (so a multi-word
+    closed answer such as "right side" never scores); open = recall of answer tokens."""
+    pred = tokens(prediction)
     if answer_type == 'closed':
-        yn = [t for t in pred if t in ('yes', 'no')]
-        if yn:
-            return float(yn[0] == ' '.join(gt))
-        return float(bool(gt) and set(gt) <= set(pred))  # non yes/no closed answers
-    counts = Counter(gt)
-    return sum((counts & Counter(pred)).values()) / len(gt) if gt else 0.0
+        return float(str(answer).strip().lower() in pred)
+    counts = Counter(tokens(answer))
+    return sum((counts & Counter(pred)).values()) / sum(counts.values()) if counts else 0.0
 
 
 def summarize(rows, preds):

@@ -56,6 +56,8 @@ HF는 이 값을 `1 - mask`로 뒤집어 0이 아니면 모두 −inf 처리하�
 ## 논문과 다를 수 있는 부분
 
 - **데이터 split**: HF mirror(flaviagiammarino/vqa-rad, BoKelvin/SLAKE, flaviagiammarino/path-vqa)를 사용한다. 논문 split과 동일한지는 검증되지 않았다.
+- **VQA-RAD open/closed 라벨**: HF mirror에는 `answer_type`이 없어 download 직후에는 "답이 yes/no면 closed"다 (test 251/200). `python -m phi3cfg.vqarad_labels --dataset-dir DATA/vqa_rad`로 원본 VQA-RAD 라벨(test closed 272 / open 179, "left or right?" 같은 선택형도 closed)로 바꾼다. 라벨 출처는 팀 repo `MinseongKim-dev/Expert-CFG`의 원본 3,515문항 JSON(commit 고정, sha256 확인)이고, (질문, 답) 정규화 문자열로 매칭한다 (test 451/451, train 1,793/1,793 일치). SLAKE는 원본 라벨이 이미 들어 있다.
+- **closed 채점**: 팀 Phi-3.5V 베이스라인과 같은 규칙. 소문자로 바꾼 정답 전체가 예측의 토큰 중 하나이면 1점 (예측 "yes, no"는 yes/no 모두 정답, "right side" 같은 여러 단어 closed 정답은 항상 0점 — VQA-RAD test에서 1문항). open은 정답 토큰 recall.
 - **KB caption**: 논문은 GPT-4로 QA를 caption으로 변환(Fig.7)했다. 기본값은 `"질문? 답."` 템플릿이다. `--llm gpt-4o`(OPENAI_API_KEY 필요, 데이터 텍스트가 OpenAI로 전송됨)로 논문 방식을 쓸 수 있다.
 - **ROCO/PEIR**: 자동 다운로드하지 않는다. `{"image": 절대경로, "caption": ...}` JSONL을 만들어 `retrieval build --extra`로 추가한다.
 - **closed 질문 highlight**: 논문은 GPT-4 키워드 추출(Fig.8/9)을 쓴다. 기본값은 질문과 내용어가 가장 많이 겹치는 KB 문장이다 (`--llm` 사용 시 Fig.8/9 프롬프트). 겹치는 문장이 없으면 해당 질문은 guidance 없이 expert-RAG로 처리되고 `cfg_applied=false`로 기록된다.
