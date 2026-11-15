@@ -30,9 +30,15 @@ def main():
     p.add_argument('--batch', type=int, default=64)
     p.add_argument('--seed', type=int, default=42)
     p.add_argument('--resume', action='store_true')
+    p.add_argument('--save-epochs', help='e.g. "2,4,6,8,10": checkpoint only at these epochs and keep them all '
+                                         '(for validation-based selection). Default: every epoch, keep last 2')
+    p.add_argument('--no-grad-ckpt', action='store_true', help='disable gradient checkpointing (faster, more memory)')
     args = p.parse_args()
+    save_epochs = {int(e) for e in args.save_epochs.split(',')} if args.save_epochs else None
+    if save_epochs and not all(1 <= e <= args.epochs for e in save_epochs):
+        p.error(f'--save-epochs must lie in 1..{args.epochs}')
 
-    from transformers import Trainer, TrainingArguments, set_seed
+    from transformers import Trainer, TrainerCallback, TrainingArguments, set_seed
     set_seed(args.seed)
     ds_dir = Path(args.dataset_dir)
     train = load_data(ds_dir / 'train.jsonl', 'train')
@@ -67,10 +73,20 @@ def main():
         gradient_accumulation_steps=args.batch, learning_rate=args.lr, lr_scheduler_type='cosine',
         optim='adamw_torch', weight_decay=0.0, warmup_ratio=0.03,
         fp16=args.precision != 'bf16', bf16=args.precision == 'bf16',
-        gradient_checkpointing=True, gradient_checkpointing_kwargs={'use_reentrant': False},
+        gradient_checkpointing=not args.no_grad_ckpt,
+        gradient_checkpointing_kwargs={'use_reentrant': False} if not args.no_grad_ckpt else None,
         remove_unused_columns=False, dataloader_num_workers=2, logging_steps=5,
-        save_strategy='epoch', save_total_limit=2, report_to='none', seed=args.seed)
-    trainer = Trainer(model=model, args=targs, train_dataset=train, data_collator=collate)
+        save_strategy='epoch', save_total_limit=None if save_epochs else 2,
+        report_to='none', seed=args.seed)
+
+    class SaveAtEpochs(TrainerCallback):
+        """Runs after the default flow callback: keep its per-epoch save only at the chosen epochs."""
+        def on_epoch_end(self, args, state, control, **kwargs):
+            control.should_save = int(round(state.epoch)) in save_epochs
+            return control
+
+    trainer = Trainer(model=model, args=targs, train_dataset=train, data_collator=collate,
+                      callbacks=[SaveAtEpochs()] if save_epochs else None)
     if args.resume:
         # torch>=2.6 defaults torch.load(weights_only=True), which rejects the numpy RNG state that
         # transformers 4.44 saves in rng_state.pth. These checkpoints are our own, so load them fully.

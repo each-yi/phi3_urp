@@ -14,7 +14,9 @@ Phi-3.5는 코드에서 아예 지원하지 않는다. 목표는 논문 Table 1�
 ## 실행 (Colab, GPU)
 
 **Baseline만 (VQA-RAD, SLAKE)**: [Phi3V_baseline_colab.ipynb](Phi3V_baseline_colab.ipynb)를 Colab에 업로드하고 GPU 런타임에서 위부터 실행.
-노트북 하나에 필요한 코드가 모두 들어 있어 폴더 업로드가 필요 없다. 아래 셸 스크립트는 RAG/Expert-CFG까지 포함한 전체 파이프라인이다.
+노트북 하나에 필요한 코드가 모두 들어 있어 폴더 업로드가 필요 없다.
+
+**팀 Phi-3.5V와 같은 프로토콜**: [Phi3V_teamproto_colab.ipynb](Phi3V_teamproto_colab.ipynb). 팀 공통 VQA-RAD 분할(train 2,749 / val 315 / test 451, `phi3cfg.vqarad_common`), SLAKE 공식 val, VQA-RAD 10 / SLAKE 5 epoch, 지정 epoch 체크포인트 보존(`train.py --save-epochs`), val overall 최고 체크포인트로 test 1회. 결과는 `MyDrive/phi3_teamproto`에 따로 저장된다. 팀 코드와 남은 차이는 노트북 첫 셀에 정리했다. 아래 셸 스크립트는 RAG/Expert-CFG까지 포함한 전체 파이프라인이다.
 
 ```bash
 cd /content/drive/MyDrive/phi3_expert_cfg     # 이 폴더를 Drive에 업로드한 경로

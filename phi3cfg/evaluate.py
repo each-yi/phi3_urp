@@ -97,7 +97,7 @@ def main():
             results[name]['cfg_applied'] = sum(bool(r.get('cfg_applied')) for r in run.values())
     auc = uncertainty_auc(rows, base)
 
-    paper = PAPER.get(dataset, {})
+    paper = PAPER.get(dataset, {}) if args.split == 'test' else {}  # paper numbers are test-set numbers
     print(f'\n{dataset} ({len(rows)} questions)   uncertainty AUC (baseline entropy) = {auc}')
     print(f'{"run":<14}{"open":>8}{"closed":>8}{"overall":>9}   | paper open/closed/overall | re-run')
     for name, m in results.items():
