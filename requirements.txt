@@ -1,0 +1,14 @@
+# Phi-3-vision remote code is known to work with this transformers range (eager attention).
+# Install torch matching your CUDA first (Colab already has it).
+transformers==4.44.2
+peft==0.12.0
+accelerate==0.34.2
+bitsandbytes==0.44.1
+huggingface-hub==0.25.2
+datasets==2.21.0
+open_clip_torch==2.26.1
+Pillow
+numpy<2
+scikit-learn
+scipy
+# optional: openai  (only for --llm caption/highlight generation, Fig. 7-9)
