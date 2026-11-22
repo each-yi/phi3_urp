@@ -13,6 +13,8 @@ Phi-3.5는 코드에서 아예 지원하지 않는다. 목표는 논문 Table 1�
 
 ## 실행 (Colab, GPU)
 
+**Baseline, Colab A100 (VQA-RAD, SLAKE, PathVQA)**: [Phi3V_baseline_A100.ipynb](Phi3V_baseline_A100.ipynb). bf16, 80GB에서는 gradient checkpointing 끔, 결과는 `MyDrive/phi3_a100`에 저장. 논문에 없는 warmup·weight decay·grad clip은 공개 어댑터의 `training_args.bin`에서 읽어 온다 (pickle 코드를 실행하지 않는 방식).
+
 **Baseline만 (VQA-RAD, SLAKE)**: [Phi3V_baseline_colab.ipynb](Phi3V_baseline_colab.ipynb)를 Colab에 업로드하고 GPU 런타임에서 위부터 실행.
 노트북 하나에 필요한 코드가 모두 들어 있어 폴더 업로드가 필요 없다.
 

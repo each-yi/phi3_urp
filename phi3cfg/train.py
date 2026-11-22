@@ -29,6 +29,10 @@ def main():
     p.add_argument('--lr', type=float, default=1e-4)
     p.add_argument('--batch', type=int, default=64)
     p.add_argument('--seed', type=int, default=42)
+    # Not stated in the paper; defaults can be taken from the released adapter's training_args.bin
+    p.add_argument('--warmup-ratio', type=float, default=0.03)
+    p.add_argument('--weight-decay', type=float, default=0.0)
+    p.add_argument('--max-grad-norm', type=float, default=1.0)
     p.add_argument('--resume', action='store_true')
     p.add_argument('--save-epochs', help='e.g. "2,4,6,8,10": checkpoint only at these epochs and keep them all '
                                          '(for validation-based selection). Default: every epoch, keep last 2')
@@ -71,7 +75,8 @@ def main():
     targs = TrainingArguments(
         output_dir=str(out), num_train_epochs=args.epochs, per_device_train_batch_size=1,
         gradient_accumulation_steps=args.batch, learning_rate=args.lr, lr_scheduler_type='cosine',
-        optim='adamw_torch', weight_decay=0.0, warmup_ratio=0.03,
+        optim='adamw_torch', weight_decay=args.weight_decay, warmup_ratio=args.warmup_ratio,
+        max_grad_norm=args.max_grad_norm,
         fp16=args.precision != 'bf16', bf16=args.precision == 'bf16',
         gradient_checkpointing=not args.no_grad_ckpt,
         gradient_checkpointing_kwargs={'use_reentrant': False} if not args.no_grad_ckpt else None,
